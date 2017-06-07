@@ -12,16 +12,19 @@ class UsersController < ApplicationController
   end
 
   def show
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def create
     @user = User.new(user_params) #lay co so du lieu tu new
     if @user.save
       log_in @user #de current_user lay id cua nguoi dung hien tai
+      flash[:success] = "Welcome to the Sample App!"  #thong bao thanh cong
       redirect_to @user #chuyen huong sang trang khac
-      flash.now[:success] = "Welcome to the Sample App!"  #thong bao thanh cong
     else
-      render "new" #chuyen ve trang new.html.erb
+       #chuyen ve trang new.html.erb
+      flash.now[:danger] = "error_signup"
+      render "new"
     end
   end
 
