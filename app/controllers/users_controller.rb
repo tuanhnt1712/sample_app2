@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
   include SessionsHelper
-  before_action :logged_in_user, only: [:index, :edit, :update, :show, :destroy]
+  before_action :logged_in_user, only: [:index, :edit, :update, :show, :destroy,
+    :followers, :following]
   before_action :correct_user, only: [:edit, :update, :show, :destroy]
 
   def index
@@ -47,17 +48,23 @@ class UsersController < ApplicationController
     redirect_to users_url
   end 
 
+   def following
+    @title = "Following"
+    @user  = User.find(params[:id])
+    @users = @user.following.paginate(page: params[:page])
+    render 'show_follow'
+  end
+
+  def followers
+    @title = "Followers"
+    @user  = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
+  end
   private
 
   def user_params
     params.require(:user).permit(:name, :email, :password, :password_confirmation)
-  end
-
-  def logged_in_user
-    unless logged_in?
-      flash[:danger] = "Please log in"
-      redirect_to login_url
-    end
   end
 
   def correct_user
@@ -67,4 +74,6 @@ class UsersController < ApplicationController
   def admin_user
     redirect_to root_url unless current_user.admin? #de ngan can nguoi cung co the xoa = dong lenh nen chi admin ms co the dung ham nay
   end
+
+  
 end

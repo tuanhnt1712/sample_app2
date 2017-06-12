@@ -7,11 +7,11 @@ module SessionsHelper
 
   #tra ve mot nguoi dung hien tai
   def current_user
-    if (user_id = session[:user_id])
-      @current_user ||= User.find_by(id: user_id)
-    elsif (user_id = cookies.signed[:user_id])
-      user = User.find_by(id: user_id)
-      if user && user.authenticated?(:remember, cookies[:remember_token])
+    if (user_id = session[:user_id]) #kiem tra session co chua, neu co thi gan user_id = id_session tra ve true
+      @current_user ||= User.find_by(id: user_id) #gan current_user tim theo user_id vua gan
+    elsif (user_id = cookies.signed[:user_id]) #ky cookies tranh gia mao
+      user = User.find_by(id: user_id) #gan user = user tim duoc bang id o tren
+      if user && user.authenticated?(:remember, cookies[:remember_token]) #kiem tra remember degest
         log_in user
         @current_user = user
       end
@@ -25,9 +25,10 @@ module SessionsHelper
 
   #nho mot nguoi dung trong 1 session
   def remember(user)
-    user.remember #goi ham o bwn helper
+    user.remember #goi ham o bwn helper tao ra 1 the nho va luu chung vao co so du lieu
     cookies.permanent.signed[:user_id] = user.id #gan id cu user cho 1 hash cua cookies
     cookies.permanent[:remember_token] = user.remember_token #gan token da tao cho 1 hash remember_token
+    #tao cookies vinh vien cho id nguoi dung va ghi nho ma thong bao do
   end
 
   #kiem tra nguoi dung da dang nhap hay chua

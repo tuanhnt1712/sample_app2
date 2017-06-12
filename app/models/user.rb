@@ -1,5 +1,13 @@
 class User < ApplicationRecord
   has_many :microposts, dependent: :destroy
+  has_many :active_relationships,  class_name:  "Relationship",
+                                   foreign_key: "follower_id",
+                                   dependent:   :destroy
+  has_many :passive_relationships, class_name:  "Relationship",
+                                   foreign_key: "followed_id",
+                                   dependent:   :destroy
+  has_many :following, through: :active_relationships,  source: :followed
+  has_many :followers, through: :passive_relationships, source: :follower
 
   attr_accessor :remember_token, :activation_token, :reset_token #???
 	before_save :downcase_email
@@ -25,9 +33,10 @@ class User < ApplicationRecord
   def remember #update ma token vua tao vao database
     self.remember_token = User.new_token #gan cho chinh use (self de no ko phai la bien cuc bo ma la chinh no) mot ma ngau nhien
     update_attribute(:remember_digest, User.digest(remember_token)) #update thuoc tinh remember_digest bang cai da tao o tren
+      # tuong duowng BCrypt::Password.new(remember_digest) == remember_token    
   end
 
-  def authenticated?(attribute, token)
+  def authenticated?(attribute, token) #kiem tra ma
     digest = send("#{attribute}_digest")
     return false if digest.nil?
     BCrypt::Password.new(digest).is_password?(token)#xac nhan xem 2 ma cua nguoi dung va ma khi duoc gui len serve co giong nhau ko
@@ -52,7 +61,22 @@ class User < ApplicationRecord
   end
 
   def feed
-    Micropost.all
+    Micropost.where("user_id IN (?) OR user_id = ?", following_ids, id)
+  end
+
+  # Follows a user.
+  def follow(other_user)
+    following << other_user
+  end
+
+  # Unfollows a user.
+  def unfollow(other_user)
+    following.delete(other_user)
+  end
+
+  # Returns true if the current user is following the other user.
+  def following?(other_user)
+    following.include?(other_user)
   end
 
   private
